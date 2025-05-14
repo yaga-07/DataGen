@@ -1,5 +1,5 @@
 from ..core import BaseLLM
-from typing import Optional, Dict, Any
+from typing import Optional, List, Dict, Any
 from huggingface_hub import InferenceClient
 import os
 
@@ -19,7 +19,7 @@ class HFLLM(BaseLLM):
         self.api_key = api_key or os.getenv("HUGGINGFACEHUB_API_TOKEN")
         self.client = InferenceClient(model=model_name, token=self.api_key)
 
-    def generate_response(self, messages: Dict[Any], **kwargs) -> str:
+    def generate_response(self, messages: List[Dict[Any, Any]], **kwargs) -> str:
         """
         Generate a response from the model based on the given prompt.
 
@@ -35,3 +35,6 @@ class HFLLM(BaseLLM):
         )
         
         return completion.choices[0].message.content
+    
+    def __repr__(self):
+        return f"HFLLM(model_name={self.model_name})"

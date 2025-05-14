@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
 from typing import Any
-from typing import Dict, Optional
+from typing import List, Dict, Optional
 
 class BaseLLM(ABC):
     """
@@ -8,7 +8,7 @@ class BaseLLM(ABC):
     """
 
     @abstractmethod
-    def generate_response(self, messages: Dict[Any], **kwargs) -> str:
+    def generate_response(self, messages: List[Dict[Any, Any]], **kwargs) -> str:
         """
         Abstract method to generate a response based on the given prompt.
         Must be implemented by subclasses.
