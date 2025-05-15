@@ -2,7 +2,7 @@ import logging
 from src.tasks.mlm_task import MLMTask
 from src.utils.data_saver import save_data
 from src.core.base_llm import BaseLLM
-from src.models import HFLLM
+from src.models import HFLLM, GoogleLLM
 from src.utils.color_logger import get_color_logger
 
 from dotenv import load_dotenv
@@ -18,7 +18,7 @@ def main():
     mlm_logger.setLevel(logger.level)
 
     logger.info("Initializing model and MLM task...")
-    model = HFLLM(model_name=LLM_MODEL)
+    model = GoogleLLM(model_name="gemini-1.5-pro") #HFLLM(model_name=LLM_MODEL)
     logger.info(f"Using model: {model}")
 
     domain = "technology"

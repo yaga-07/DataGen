@@ -1,0 +1,13 @@
+huggingface_hub
+pandas
+python-dotenv
+google-cloud-aiplatform
+google-auth
+google-cloud-storage
+google-api-python-client
+vertexai
+google-generativeai
+# For colored logging
+colorama
+# For type hints (if using Python < 3.9)
+typing-extensions
