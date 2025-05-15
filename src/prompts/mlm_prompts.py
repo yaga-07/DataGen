@@ -10,4 +10,4 @@ The output must follow this format:
 Do not include any numbering, markdown, or additional formatting.
 """
 
-MLM_USER_PROMPT = """Generate {{num_records}} diverse and realistic sentences in the domain of "{{domain}}". Each sentence should be between 8 and 20 words long. Return only a JSON array of strings, where each string is one sentence."""
+MLM_USER_PROMPT = """Generate {{num_records}} diverse and realistic sentences in the domain of "{{domain}}". Each sentence should be between 8 and 20 words long. Return only an array of strings, where each string is one sentence."""
