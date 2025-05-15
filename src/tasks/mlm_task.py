@@ -5,7 +5,7 @@ from ..prompts.mlm_prompts import MLM_SYS_PROMPT, MLM_USER_PROMPT
 from ..core.base_task import BaseTask
 from src.utils.color_logger import get_color_logger
 
-logger = get_color_logger(name="mlm_task", level="DEBUG")
+logger = get_color_logger(name="mlm_task")
 
 # List of common stopwords to avoid masking
 STOPWORDS = {

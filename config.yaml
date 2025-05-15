@@ -1,0 +1,14 @@
+model:
+  provider: google         # or "hf" for HuggingFace
+  model_name: gemini-1.5-pro
+  # api_key: your_google_api_key
+  # service_account_json: /path/to/service_account.json
+
+task:
+  type: mlm
+  domain: technology
+  num_records: 200
+
+output:
+  folder: output
+  format: jsonl

@@ -23,16 +23,42 @@ DataGen/
 │   └── utils/               # Utilities (logging, data saving, etc.)
 ├── output/                  # Generated data output (gitignored)
 ├── .env                     # Environment variables for API keys and credentials
+├── config.yaml              # Main configuration file for data generation
 └── README.md                # Project documentation
 ```
 
 ## How It Works
 
-1. **Select an LLM Provider:** Choose from supported LLMs (e.g., HuggingFace, Google Gemini).
-2. **Choose a Task:** Define the data generation task (currently, Masked Language Modeling).
-3. **Configure Domain & Size:** Specify the domain (e.g., "technology") and number of records.
-4. **Run the Pipeline:** The framework generates data using the selected LLM and task.
-5. **Save the Output:** Data is saved in your chosen format (JSONL, CSV, or Parquet).
+1. **Configure the Workflow:** Edit `config.yaml` to specify the LLM provider, model, task, domain, number of records, and output format.
+2. **Run the Pipeline:** The framework generates data using the selected LLM and task.
+3. **Save the Output:** Data is saved in your chosen format (JSONL, CSV, or Parquet) with an auto-generated filename.
+
+## Example Configuration (`config.yaml`)
+
+```yaml
+model:
+  provider: google         # or "hf" for HuggingFace
+  model_name: gemini-1.5-pro
+  # api_key: your_google_api_key
+  # service_account_json: /path/to/service_account.json
+
+task:
+  type: mlm
+  domain: technology
+  num_records: 200
+
+output:
+  folder: output
+  format: jsonl
+```
+
+- **provider:** `"google"` for Google Gemini or `"hf"` for HuggingFace.
+- **model_name:** Name of the LLM model.
+- **task.type:** Task type, e.g., `"mlm"` for Masked Language Modeling.
+- **task.domain:** Domain for sentence generation.
+- **task.num_records:** Number of records to generate.
+- **output.folder:** Output directory.
+- **output.format:** Output file format (`jsonl`, `csv`, or `parquet`).
 
 ## Example Usage
 
@@ -44,15 +70,21 @@ DataGen/
 2. **Set up environment variables:**
    - Copy `.env.example` to `.env` and fill in your API keys and credentials.
 
-3. **Run the main script:**
+3. **Edit the configuration:**
+   - Modify `config.yaml` as needed for your use case.
+
+4. **Run the main script:**
    ```bash
    python main.py
    ```
+   Or with a custom config:
+   ```bash
+   python main.py path/to/your_config.yaml
+   ```
 
-   By default, this will generate 100 MLM records in the "technology" domain using the configured LLM provider.
-
-4. **Output:**
-   - The generated data will be saved in the `output/` directory as `mlm_data.jsonl`.
+5. **Output:**
+   - The generated data will be saved in the `output/` directory with a filename like  
+     `mlm_google_200_YYYYMMDD_HHMMSS.jsonl`.
 
 ## Extending DataGen
 
@@ -61,7 +93,7 @@ DataGen/
 1. Create a new task class in `src/tasks/` inheriting from `BaseTask`.
 2. Implement the `generate_data()` method.
 3. Add prompt templates in `src/prompts/` if needed.
-4. Update `main.py` to use your new task.
+4. Update your `config.yaml` to use your new task.
 
 ### Adding a New LLM Provider
 
