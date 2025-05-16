@@ -1,9 +1,15 @@
+from typing import TYPE_CHECKING
+
+if TYPE_CHECKING:
+    from src.core import BaseLLM
+
 import random
 import json
 from typing import List, Dict
 from ..prompts.mlm_prompts import MLM_SYS_PROMPT, MLM_USER_PROMPT
 from ..core.base_task import BaseTask
 from src.utils.color_logger import get_color_logger
+from src.utils.utils import backoff_retry
 
 logger = get_color_logger(name="mlm_task")
 
@@ -26,7 +32,7 @@ class MLMTask(BaseTask):
     Task for generating Masked Language Modeling (MLM) data.
     """
 
-    def __init__(self, model, domain, num_records, mask_pct: float = 0.15):
+    def __init__(self, model: 'BaseLLM', domain: str, num_records: int, mask_pct: float = 0.15):
         super().__init__(model, domain, num_records)
         self.mask_pct = mask_pct
 
@@ -87,14 +93,24 @@ class MLMTask(BaseTask):
                     }
                 ]
                 logger.debug(f"Prompt (batch {generated // batch_size + 1}, attempt {attempt+1}):\n{json.dumps(prompt, indent=2)}")
-                response = self.model.generate_response(prompt)
-                logger.debug(f"Raw LLM response (batch {generated // batch_size + 1}, attempt {attempt+1}):\n{response}")
+                def call_llm():
+                    return self.model.generate_response(prompt)
                 try:
+                    response = backoff_retry(
+                        call_llm,
+                        max_retries=max_retries,
+                        base_delay=1,
+                        max_delay=8,
+                        exceptions=(Exception,),
+                        logger=logger
+                    )
+                    logger.debug(f"Raw LLM response (batch {generated // batch_size + 1}, attempt {attempt+1}):\n{response}")
                     batch_sentences = eval(response)
                     if isinstance(batch_sentences, list) and all(isinstance(s, str) for s in batch_sentences):
                         sentences = batch_sentences
                         break
-                except Exception:
+                except Exception as e:
+                    logger.warning(f"Batch {generated // batch_size + 1}, attempt {attempt+1} failed: {e}")
                     sentences = []
             # Only add up to the number of records needed
             for sentence in sentences:

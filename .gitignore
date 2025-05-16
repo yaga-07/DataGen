@@ -175,3 +175,7 @@ cython_debug/
 
 # output
 output/
+
+# misc
+*.DS_Store
+misc.py
