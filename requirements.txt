@@ -11,3 +11,8 @@ google-generativeai
 colorama
 # For type hints (if using Python < 3.9)
 typing-extensions
+# for web
+duckduckgo-search
+# For web scraping
+beautifulsoup4
+requests

@@ -1,7 +1,7 @@
 import yaml
 import logging
 from src.models import HFLLM, GoogleLLM
-from src.tasks.mlm_task import MLMTask
+from src.tasks import MLMTask, DocumentRetrievalTask
 from src.utils.data_saver import save_data
 from src.utils.color_logger import get_color_logger
 from dotenv import load_dotenv
@@ -46,6 +46,8 @@ def run_from_config(config_path: str):
 
     if task_type == "mlm":
         task = MLMTask(model=model, domain=domain, num_records=num_records)
+    elif task_type == "doc_retrieval":
+        task = DocumentRetrievalTask(model=model, domain=domain, num_records=num_records, save_intermediate_results=config["output"].get("save_intermediate_results", False))
     else:
         raise ValueError(f"Unknown task type: {task_type}")
 
