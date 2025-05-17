@@ -63,12 +63,13 @@ class DocumentRetrievalTask(BaseTask):
                     return self.model.generate_response(prompt)
                 try:
                     response = backoff_retry(
-                        call_llm,
+                        self.model.generate_response,
                         max_retries=self.max_retries,
                         base_delay=1,
                         max_delay=8,
                         exceptions=(Exception,),
-                        logger=logger
+                        logger=logger,
+                        messages=prompt,
                     )
                     logger.debug(f"Raw LLM response (batch {generated // self.batch_size + 1}, attempt {attempt+1}):\n{response}")
                     batch_sentences = eval(response)
@@ -149,51 +150,68 @@ class DocumentRetrievalTask(BaseTask):
             List[Dict]: List of structured data samples, each as a dictionary.
         """
         results = []
-        for web_rel in intermediate_web_results:
-            try:
-                web_content = web_rel.get("results", [])
-                if web_content:
-                    body = web_content[0].get("body", "")
-                    url = web_content[0].get("href", "")
-                    if not url:
-                        logger.warning(f"No URL found for query '{web_rel.get('query')}'.")
-                        continue
-                    main_text = fetch_and_parse(url)
-                    if main_text:
-                        bodymain_text = f"{body}\n\n{main_text}"
-                        prompt = [
-                            {
-                                "role": "system",
-                                "content": DOC_RET_SYS_PROMPT_D,
-                            },
-                            {
-                                "role": "user",
-                                "content": DOC_RET_USER_PROMPT_D.replace("{WEB_CONTENT}", bodymain_text),
-                            }
-                        ]
-                        logger.debug(f"Prompt for document retrieval:\n{json.dumps(prompt, indent=2)}")
-                        def call_llm():
-                            return self.model.generate_response(prompt)
-                        response = backoff_retry(
-                            call_llm,
-                            max_retries=self.max_retries,
-                            base_delay=1,
-                            max_delay=8,
-                            exceptions=(Exception,),
-                            logger=logger
-                        )
-                        logger.debug(f"Raw LLM response:\n{response}")
-                        response = eval(response)
-                        results.extend(response)
+        generated = 0
+        total = self.num_records
+        while generated < total:
+            for web_rel in intermediate_web_results:
+                if generated >= total:
+                    break
+                try:
+                    web_content = web_rel.get("results", [])
+                    if web_content:
+                        body = web_content[0].get("body", "")
+                        url = web_content[0].get("href", "")
+                        if not url:
+                            logger.warning(f"No URL found for query '{web_rel.get('query')}'.")
+                            continue
+                        main_text = fetch_and_parse(url)
+                        if main_text:
+                            bodymain_text = f"{body}\n\n{main_text}"
+                            prompt = [
+                                {
+                                    "role": "system",
+                                    "content": DOC_RET_SYS_PROMPT_D,
+                                },
+                                {
+                                    "role": "user",
+                                    "content": DOC_RET_USER_PROMPT_D.replace("{WEB_CONTENT}", bodymain_text),
+                                }
+                            ]
+                            logger.debug(f"Prompt for document retrieval:\n{json.dumps(prompt, indent=2)}")
+                            for attempt in range(self.max_retries):
+                                try:
+                                    def call_llm():
+                                        return self.model.generate_response(prompt)
+                                    response = backoff_retry(
+                                        self.model.generate_response,
+                                        max_retries=self.max_retries,
+                                        base_delay=1,
+                                        max_delay=8,
+                                        exceptions=(Exception,),
+                                        logger=logger,
+                                        messages=prompt,
+                                    )
+                                    logger.debug(f"Raw LLM response (attempt {attempt+1}):\n{response}")
+                                    batch_results = eval(response)
+                                    if isinstance(batch_results, list):
+                                        results.extend(batch_results)
+                                        generated += len(batch_results)
+                                        break
+                                except Exception as e:
+                                    logger.warning(f"Attempt {attempt+1} failed for document retrieval for query '{web_rel.get('query')}': {e}")
+                                    continue
+                        else:
+                            logger.warning(f"No main text found for URL '{url}' in query '{web_rel.get('query')}'.")
+                            continue
                     else:
-                        logger.warning(f"No main text found for URL '{url}' in query '{web_rel.get('query')}'.")
+                        logger.warning(f"No content found for query '{web_rel.get('query')}'.")
                         continue
-                else:
-                    logger.warning(f"No content found for query '{web_rel.get('query')}'.")
-                    continue
-            except Exception as e:
-                logger.error(f"Error during document retrieval for query '{web_rel.get('query')}': {e}")
-        return results
+                except Exception as e:
+                    logger.error(f"Error during document retrieval for query '{web_rel.get('query')}': {e}")
+            if generated >= total:
+                break
+        # Truncate results if more than needed
+        return results[:total]
 
     def generate_data(self) -> List[Dict]:
         """
@@ -206,4 +224,5 @@ class DocumentRetrievalTask(BaseTask):
         logger.info(f"Generated {len(queries)} search queries.")
         queries_web = self._get_search_queries_web(queries)
         logger.info(f"Generated {len(queries_web)} search queries with web search.")
-        return []
+        doc_retrieval_data = self._generate_document_retrieval_data(queries_web)
+        return doc_retrieval_data
