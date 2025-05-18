@@ -16,10 +16,10 @@ from ..prompts.doc_retrieval_prompts import (
     )
 from ..core.base_task import BaseTask
 from src.utils.color_logger import get_color_logger
-from src.utils.utils import backoff_retry, fetch_and_parse
+from src.utils.utils import backoff_retry, fetch_and_parse, extract_json_from_markdown
 from src.utils.data_saver import save_data
 
-logger = get_color_logger(name=__name__,)
+logger = get_color_logger(name=__name__, level="DEBUG")
 
 class DocumentRetrievalTask(BaseTask):
     """
@@ -152,7 +152,9 @@ class DocumentRetrievalTask(BaseTask):
         results = []
         generated = 0
         total = self.num_records
-        while generated < total:
+        max_outer_loops = 5  # Prevent infinite loop
+        outer_loops = 0
+        while generated < total and outer_loops < max_outer_loops:
             for web_rel in intermediate_web_results:
                 if generated >= total:
                     break
@@ -174,7 +176,7 @@ class DocumentRetrievalTask(BaseTask):
                                 },
                                 {
                                     "role": "user",
-                                    "content": DOC_RET_USER_PROMPT_D.replace("{WEB_CONTENT}", bodymain_text),
+                                    "content": DOC_RET_USER_PROMPT_D.replace("{{WEB_CONTENT}}", bodymain_text),
                                 }
                             ]
                             logger.debug(f"Prompt for document retrieval:\n{json.dumps(prompt, indent=2)}")
@@ -192,7 +194,10 @@ class DocumentRetrievalTask(BaseTask):
                                         messages=prompt,
                                     )
                                     logger.debug(f"Raw LLM response (attempt {attempt+1}):\n{response}")
-                                    batch_results = eval(response)
+                                    response = extract_json_from_markdown(response)
+                                    if not response:
+                                        raise ValueError("No JSON found in the response.")
+                                    batch_results = response
                                     if isinstance(batch_results, list):
                                         results.extend(batch_results)
                                         generated += len(batch_results)
@@ -208,7 +213,11 @@ class DocumentRetrievalTask(BaseTask):
                         continue
                 except Exception as e:
                     logger.error(f"Error during document retrieval for query '{web_rel.get('query')}': {e}")
+            outer_loops += 1
             if generated >= total:
+                break
+            if outer_loops >= max_outer_loops:
+                logger.warning(f"Reached max outer loop retries ({max_outer_loops}) in _generate_document_retrieval_data. Generated {generated} records out of {total}.")
                 break
         # Truncate results if more than needed
         return results[:total]

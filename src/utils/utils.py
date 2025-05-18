@@ -1,6 +1,8 @@
 import time
 import random
 import requests
+import json
+import re
 from bs4 import BeautifulSoup, Comment
 
 def backoff_retry(func, max_retries=3, base_delay=1, max_delay=10, exceptions=(Exception,), logger=None, *args, **kwargs):
@@ -97,4 +99,19 @@ def fetch_and_parse(url):
         return None
     except Exception as e:
         print(f"Error parsing content: {e}")
+        return None
+    
+def extract_json_from_markdown(md_text):
+    """
+    Extract JSON content from a markdown-formatted code block.
+    """
+    # Use regex to remove triple backticks and optional language identifier
+    match = re.search(r"```(?:json)?\s*(.*?)```", md_text, re.DOTALL)
+    if match:
+        json_str = match.group(1).strip()
+        try:
+            return json.loads(json_str)
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON format: {e}")
+    else:
         return None

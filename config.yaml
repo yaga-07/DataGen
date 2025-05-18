@@ -6,7 +6,7 @@ model:
 
 task:
   type: doc_retrieval   #mlm
-  domain: technology
+  domain: Marvel movies
   num_records: 2
 
 output:

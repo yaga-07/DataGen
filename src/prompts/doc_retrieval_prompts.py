@@ -21,7 +21,7 @@ Your job is to:
 - Read the given web content.
 - Extract meaningful and self-contained passages.
 - Generate natural language queries that could retrieve each passage.
-- Output each query-document pair in JSON Lines format.
+- Output each query-document pair in JSON format.
 
 Each passage must be relevant, well-formed, and ideally 2–4 sentences. The query should sound like a real user question and closely relate to the content in the passage.
 """
@@ -29,10 +29,18 @@ Each passage must be relevant, well-formed, and ideally 2–4 sentences. The que
 DOC_RET_USER_PROMPT_D = """
 Generate synthetic query-document training data from the following web page content.
 
-Return the output in JSON Lines (`.jsonl`) format, where each line has:
-- "query": the generated question
-- "document": the relevant passage
-
+Return the output in JSON format, where an array has:
+[
+  {
+    "query": "search query 1",
+    "document": "relevant passage 1"
+  },
+  {
+    "query": "search query 2",
+    "document": "relevant passage 2"
+  },
+  ...
+]
 Web Content:
-{WEB_CONTENT}
+{{WEB_CONTENT}}
 """
