@@ -28,6 +28,21 @@ DataGen/
 └── README.md                # Project documentation
 ```
 
+## Installation
+
+You can install DataGen as a Python package:
+
+```bash
+pip install .
+```
+
+or from a local wheel:
+
+```bash
+python setup.py sdist bdist_wheel
+pip install dist/datagen-0.1.0-py3-none-any.whl
+```
+
 ## How It Works
 
 1. **Configure the Workflow:** Edit `config.yaml` to specify the LLM provider, model, task, domain, number of records, and output format.
