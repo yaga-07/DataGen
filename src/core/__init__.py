@@ -1,2 +1,2 @@
 from .base_llm import BaseLLM
-from .base_task import BaseTask
+from .base_task import BaseTask, AutoTask

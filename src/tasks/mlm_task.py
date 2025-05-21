@@ -6,8 +6,8 @@ if TYPE_CHECKING:
 import random
 import json
 from typing import List, Dict
-from ..prompts.mlm_prompts import MLM_SYS_PROMPT, MLM_USER_PROMPT
-from ..core.base_task import BaseTask
+from src.prompts.mlm_prompts import MLM_SYS_PROMPT, MLM_USER_PROMPT
+from src.core import BaseTask, AutoTask
 from src.utils.color_logger import get_color_logger
 from src.utils.utils import backoff_retry
 
@@ -27,6 +27,7 @@ STOPWORDS = {
     "don't", "should", "now"
 }
 
+@AutoTask.register("mlm")
 class MLMTask(BaseTask):
     """
     Task for generating Masked Language Modeling (MLM) data.

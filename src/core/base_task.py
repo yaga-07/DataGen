@@ -1,6 +1,27 @@
 from abc import ABC, abstractmethod
 from .base_llm import BaseLLM
 
+class AutoTask:
+    """
+    Handles task registration and retrieval.
+    """
+    _registry = {}
+
+    @classmethod
+    def register(cls, name):
+        def decorator(subclass):
+            subclass.task_name = name
+            cls._registry[name] = subclass
+            return subclass
+        return decorator
+
+    @classmethod
+    def get_task(cls, name, *args, **kwargs):
+        task_class = cls._registry.get(name)
+        if task_class is None:
+            raise ValueError(f"Task '{name}' not found in registry.")
+        return task_class(*args, **kwargs)
+
 class BaseTask(ABC):
     """
     Abstract base class for tasks responsible for dataset generation.

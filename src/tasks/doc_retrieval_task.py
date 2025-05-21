@@ -8,19 +8,20 @@ import json
 from math import ceil
 from typing import List, Dict
 from duckduckgo_search import DDGS
-from ..prompts.doc_retrieval_prompts import (
+from src.prompts.doc_retrieval_prompts import (
     DOC_RET_SYS_PROMPT_Q, 
     DOC_RET_USER_PROMPT_Q,
     DOC_RET_SYS_PROMPT_D,
     DOC_RET_USER_PROMPT_D
     )
-from ..core.base_task import BaseTask
+from src.core.base_task import BaseTask, AutoTask
 from src.utils.color_logger import get_color_logger
 from src.utils.utils import backoff_retry, fetch_and_parse, extract_json_from_markdown
 from src.utils.data_saver import save_data
 
 logger = get_color_logger(name=__name__, level="DEBUG")
 
+@AutoTask.register("doc_retrieval")
 class DocumentRetrievalTask(BaseTask):
     """
     Task for generating Document Retrieval data.

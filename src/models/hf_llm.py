@@ -1,4 +1,4 @@
-from ..core import BaseLLM
+from src.core import BaseLLM
 from typing import Optional, List, Dict, Any
 from huggingface_hub import InferenceClient
 import os
