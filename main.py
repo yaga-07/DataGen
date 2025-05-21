@@ -1,6 +1,6 @@
 import sys
 import yaml
-from src.pipeline import Pipeline
+from src.core.pipeline import Pipeline
 from src.models import HFLLM, GoogleLLM
 from src.tasks import MLMTask, DocumentRetrievalTask
 from src.core import AutoTask

@@ -1,9 +1,9 @@
-from src.core import BaseLLM, AutoLLM
+from src.core import BaseLLM, AutoModel
 from typing import Optional, List, Dict, Any
 from huggingface_hub import InferenceClient
 import os
 
-@AutoLLM.register("hf")
+@AutoModel.register("hf")
 class HFLLM(BaseLLM):
     """
     A class to interact with Hugging Face models using the Inference API.

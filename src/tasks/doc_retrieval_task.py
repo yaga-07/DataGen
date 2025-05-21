@@ -14,7 +14,7 @@ from src.prompts.doc_retrieval_prompts import (
     DOC_RET_SYS_PROMPT_D,
     DOC_RET_USER_PROMPT_D
     )
-from src.core.base_task import BaseTask, AutoTask
+from src.core import BaseTask, AutoTask
 from src.utils.color_logger import get_color_logger
 from src.utils.utils import backoff_retry, fetch_and_parse, extract_json_from_markdown
 from src.utils.data_saver import save_data

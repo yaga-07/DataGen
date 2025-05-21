@@ -67,7 +67,7 @@ You can use DataGen via the main entry point. Here is an example usage as found 
 
 ```python
 import logging
-from src.pipeline import Pipeline
+from src.core.pipeline import Pipeline
 from dotenv import load_dotenv
 import os
 

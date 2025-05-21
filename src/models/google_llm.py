@@ -1,8 +1,8 @@
-from src.core import BaseLLM, AutoLLM
+from src.core import BaseLLM, AutoModel
 from typing import Optional, List, Dict, Any
 import os
 
-@AutoLLM.register("google")
+@AutoModel.register("google")
 class GoogleLLM(BaseLLM):
     """
     A class to interact with Google LLMs (Vertex AI Gemini) using either service account or API key.

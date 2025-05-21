@@ -1,4 +1,4 @@
-from src.core import AutoTask, AutoLLM
+from src.core import AutoTask, AutoModel
 from src.utils.data_saver import save_data
 from src.utils.color_logger import get_color_logger
 from datetime import datetime
@@ -10,7 +10,6 @@ class Pipeline:
         self.task = task
         self.config = None
         self.logger = get_color_logger(level="INFO")
-        self.logger.info(f"Pipeline built with task '{type(self.task).__name__}' and model '{type(self.model).__name__}'.")
 
     @classmethod
     def build(cls, pipeline_str: str, config=None):
@@ -23,7 +22,7 @@ class Pipeline:
             raise ValueError("Pipeline string must be in the format 'task:provider:model'.")
 
         task_type, provider, model_name = parts
-        model = AutoLLM.get_model(f"{provider}:{model_name}")
+        model = AutoModel.get_model(f"{provider}:{model_name}")
         if config:
             cls.config = config
         domain = config.get("task", {}).get("domain", "general")
