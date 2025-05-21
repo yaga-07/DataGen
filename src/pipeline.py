@@ -1,5 +1,4 @@
-from src.core.base_task import AutoTask
-from src.models import HFLLM, GoogleLLM
+from src.core import AutoTask, AutoLLM
 from src.utils.data_saver import save_data
 from src.utils.color_logger import get_color_logger
 from datetime import datetime
@@ -11,17 +10,28 @@ class Pipeline:
         self.task = task
         self.config = None
         self.logger = get_color_logger(level="INFO")
+        self.logger.info(f"Pipeline built with task '{type(self.task).__name__}' and model '{type(self.model).__name__}'.")
 
-    def build(self, model, task, config=None):
+    @classmethod
+    def build(cls, pipeline_str: str, config=None):
         """
         Build the pipeline from model and task instances.
-        Optionally store config for output/run.
+        The pipeline string should be in the format 'task:provider:model'.
         """
-        self.model = model
-        self.task = task
-        self.config = config
-        self.logger.info(f"Pipeline built with task '{type(task).__name__}' and model '{type(model).__name__}'.")
+        parts = pipeline_str.split(":")
+        if len(parts) != 3:
+            raise ValueError("Pipeline string must be in the format 'task:provider:model'.")
 
+        task_type, provider, model_name = parts
+        model = AutoLLM.get_model(f"{provider}:{model_name}")
+        if config:
+            cls.config = config
+        domain = config.get("task", {}).get("domain", "general")
+        num_records = config.get("task", {}).get("num_records", 10)
+        task = AutoTask.get_task(task_type, model, domain=domain, num_records=num_records)
+        c = cls(task=task)
+        c.model = model
+        return c
 
     def run(self, output_cfg=None):
         """

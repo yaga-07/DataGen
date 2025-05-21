@@ -9,6 +9,7 @@ DataGen is a minimal yet extensible framework for generating synthetic datasets 
 - **Task-based Design:** Each data generation scenario is encapsulated as a "task" for modularity and extensibility.
 - **Easy Extension:** Add new tasks or integrate new LLM providers with minimal code changes.
 - **Flexible Output:** Save generated data in JSONL, CSV, or Parquet formats.
+- **Automatic Model/Task Registration:** No need to manually import or register models/tasks—DataGen dynamically discovers them.
 
 ## Project Structure
 
@@ -19,7 +20,7 @@ DataGen/
 │   ├── core/                # Abstract base classes for LLMs and tasks
 │   ├── models/              # LLM provider implementations (HuggingFace, Google, etc.)
 │   ├── prompts/             # Prompt templates for different tasks
-│   ├── tasks/               # Task implementations (e.g., MLM)
+│   ├── tasks/               # Task implementations (e.g., MLM, Document Retrieval)
 │   └── utils/               # Utilities (logging, data saving, etc.)
 ├── output/                  # Generated data output (gitignored)
 ├── .env                     # Environment variables for API keys and credentials
@@ -62,29 +63,41 @@ output:
 
 ## Example Usage
 
-1. **Install dependencies:**
-   ```bash
-   pip install -r requirements.txt
-   ```
+You can use DataGen via the main entry point. Here is an example usage as found in `main.py`:
 
-2. **Set up environment variables:**
-   - Copy `.env.example` to `.env` and fill in your API keys and credentials.
+```python
+import logging
+from src.pipeline import Pipeline
+from dotenv import load_dotenv
+import os
 
-3. **Edit the configuration:**
-   - Modify `config.yaml` as needed for your use case.
+load_dotenv()
 
-4. **Run the main script:**
-   ```bash
-   python main.py
-   ```
-   Or with a custom config:
-   ```bash
-   python main.py path/to/your_config.yaml
-   ```
+config = {
+    "model": {
+        "provider": "google",
+        "model_name": "gemini-1.5-pro"
+    },
+    "task": {
+        "type": "mlm",
+        "domain": "AI",
+        "num_records": 2
+    },
+    "output": {
+        "folder": "output",
+        "format": "jsonl"
+    }
+}
 
-5. **Output:**
-   - The generated data will be saved in the `output/` directory with a filename like  
-     `mlm_google_200_YYYYMMDD_HHMMSS.jsonl`.
+pipeline = Pipeline.build("mlm:google:gemini-1.5-pro", config=config)
+pipeline.run(output_cfg=config["output"])
+```
+
+Or, if you want to use a YAML config file:
+
+```bash
+python main.py path/to/your_config.yaml
+```
 
 ## Extending DataGen
 
@@ -93,13 +106,15 @@ output:
 1. Create a new task class in `src/tasks/` inheriting from `BaseTask`.
 2. Implement the `generate_data()` method.
 3. Add prompt templates in `src/prompts/` if needed.
-4. Update your `config.yaml` to use your new task.
+4. Decorate your class with `@AutoTask.register("your_task_name")`.
+5. **No need to manually import or register your task—DataGen will discover it automatically.**
 
 ### Adding a New LLM Provider
 
 1. Create a new model class in `src/models/` inheriting from `BaseLLM`.
 2. Implement the `generate_response()` method.
-3. Register your model in `src/models/__init__.py`.
+3. Decorate your class with `@AutoLLM.register("your_provider_name")`.
+4. **No need to manually import or register your model—DataGen will discover it automatically.**
 
 ## Supported LLM Providers
 
@@ -109,6 +124,7 @@ output:
 ## Supported Tasks
 
 - **Masked Language Modeling (MLM):** Generates sentences with masked tokens for pretraining or evaluation.
+- **Document Retrieval:** Generates query-document pairs for retrieval-augmented generation.
 
 _More tasks can be added in the future!_
 
